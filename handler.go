@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 // MapHandler will return an http.HandlerFunc (which also
@@ -38,8 +40,8 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 //
 // See MapHandler to create a similar http.HandlerFunc via
 // a mapping of paths to urls.
-func YAMLHandler(yaml []byte, fallback http.Handler) (http.HandlerFunc, error) {
-	parsedYaml, err := parseYAML(yaml)
+func YAMLHandler(yamlFile []byte, fallback http.Handler) (http.HandlerFunc, error) {
+	parsedYaml, err := parseYAML(yamlFile)
 	if err != nil {
 		return nil, err
 	}
@@ -47,18 +49,19 @@ func YAMLHandler(yaml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 	return MapHandler(pathMap, fallback), nil
 }
 
-func parseYAML(yaml []byte) (parsedYaml map[string]string, err error) {
-	err = yaml.Unmarshal(yaml, &parsedYaml)
+func parseYAML(yamlFile []byte) (parsedYaml []map[string]string, err error) {
+	err = yaml.Unmarshal(yamlFile, &parsedYaml)
 	if err == nil {
 		return nil, err
 	}
 	return parsedYaml, nil
 }
 
-func buildMap(parsedYaml map[string]string) map[string]string {
+func buildMap(parsedYaml []map[string]string) map[string]string {
 	builtMap := make(map[string]string)
 	for _, mapInside := range parsedYaml {
 		tempKey := mapInside["path"]
 		builtMap[tempKey] = mapInside["url"]
 	}
+	return builtMap
 }
